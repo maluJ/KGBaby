@@ -1,0 +1,35 @@
+# tasks/main.yml
+---
+- name: Ensure SSH configuration directory exists
+  file:
+    path: /etc/ssh
+    state: directory
+
+- name: Set SSH port
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?Port "
+    line: "Port {{ ssh_port }}"
+  notify: restart ssh
+
+- name: Disable root login
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PermitRootLogin "
+    line: "PermitRootLogin {{ 'yes' if allow_root_login else 'no' }}"
+  notify: restart ssh
+
+- name: Set SSH key-based authentication requirement
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication "
+    line: "PasswordAuthentication {{ 'yes' if allow_password_auth else 'no' }}"
+  notify: restart ssh
+
+- name: Allow only specific users
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?AllowUsers "
+    line: "AllowUsers {{ allowed_ssh_users | join(' ') }}"
+  when: allowed_ssh_users | length > 0
+  notify: restart ssh

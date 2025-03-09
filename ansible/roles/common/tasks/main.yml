@@ -1,0 +1,23 @@
+- name: Update all packages to their latest version
+  apt:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - zsh
+    - git
+    - htop
+    - curl
+    - wget
+    - vim
+    - unzip
+    - zip
+    - ncdu
+    - tree
+    - iftop
+    - traceroute

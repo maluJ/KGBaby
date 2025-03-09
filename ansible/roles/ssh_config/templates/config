@@ -1,0 +1,7 @@
+{% for host in groups['all'] %}
+Host {{ host }}
+    HostName {{ hostvars[host].ansible_host }}
+    User {{ hostvars[host].ansible_user | default('root') }}
+    IdentityFile ~/.ssh/id_rsa
+    StrictHostKeyChecking no
+{% endfor %}

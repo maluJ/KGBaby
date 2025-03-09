@@ -1,0 +1,6 @@
+packages:
+  - ninja-build
+  - gettext
+  - cmake
+  - curl
+  - build-essential

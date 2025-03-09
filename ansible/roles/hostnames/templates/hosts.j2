@@ -1,0 +1,6 @@
+127.0.0.1   localhost
+
+# Hosts for cluster
+{% for host in groups['all'] %}
+{{ hostvars[host].ansible_host }}   {{ host }}
+{% endfor %}

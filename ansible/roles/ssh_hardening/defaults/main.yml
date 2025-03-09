@@ -1,0 +1,6 @@
+# defaults/main.yml
+ssh_port: 22 # Default SSH port
+allow_root_login: false # Disable root login
+allow_password_auth: false # Disable password authentication
+allowed_ssh_users: # List of allowed users
+  - hammal

@@ -1,0 +1,29 @@
+# roles/rust/tasks/main.yml
+- name: Create a single directory
+  file:
+    path: "{{ tmp_folder }}"
+    state: directory
+    mode: "0755"
+
+- name: Download Rust installation script
+  ansible.builtin.get_url:
+    url: "{{ rust_install_script_url }}"
+    dest: "{{ tmp_folder }}/rustup-init.sh"
+    mode: "0755"
+
+- name: Run Rust installation script
+  ansible.builtin.command: "{{ tmp_folder }}/rustup-init.sh -y --default-toolchain {{ rust_default_toolchain }}"
+  args:
+    creates: /home/{{ ansible_user }}/.cargo/bin/rustc
+
+- name: Add Rust to PATH
+  ansible.builtin.lineinfile:
+    path: /home/{{ ansible_user }}/.bashrc
+    line: 'export PATH="$HOME/.cargo/bin:$PATH"'
+    create: yes
+    state: present
+
+- name: Remove Rust installation script
+  ansible.builtin.file:
+    path: "{{ tmp_folder }}/rustup-init.sh"
+    state: absent

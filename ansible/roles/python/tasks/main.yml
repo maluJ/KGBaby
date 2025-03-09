@@ -1,0 +1,59 @@
+---
+- name: Upgrade OS packages
+  ansible.builtin.apt:
+    name: "*"
+    state: latest
+    update_cache: yes
+
+- name: Check if a reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+    get_checksum: no
+  register: reboot_required_file
+
+- name: Reboot the server (if required).
+  ansible.builtin.reboot:
+    reboot_timeout: 900
+  when: reboot_required_file.stat.exists == true
+
+- name: Install dependency packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: latest
+  loop: "{{ packages }}"
+
+- name: Download Python source archive
+  ansible.builtin.get_url:
+    dest: "{{ python_src_dir }}"
+    url: "{{ python_url }}"
+
+- name: Extract archive
+  ansible.builtin.unarchive:
+    src: "{{ python_src_dir }}/{{ python_archive }}"
+    dest: "{{ python_src_dir }}"
+    remote_src: true
+
+- name: Run ./configure
+  ansible.builtin.command:
+    cmd: ./configure --enable-optimizations --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
+    chdir: "{{ python_src_dir }}/Python-{{ python_release }}"
+    creates: "{{ python_src_dir }}/Python-{{ python_release }}/config.log"
+
+- name: Run make to build python
+  community.general.make:
+    chdir: "{{ python_src_dir }}/Python-{{ python_release }}"
+    jobs: 4
+  register: make_result
+
+- name: Run make install
+  community.general.make:
+    chdir: "{{ python_src_dir }}/Python-{{ python_release }}"
+    target: install
+  register: install_result
+  when: make_result is not skipped
+
+- name: Clean up source directory
+  ansible.builtin.file:
+    path: "{{ python_src_dir }}"
+    state: absent
+  when: install_result is not skipped

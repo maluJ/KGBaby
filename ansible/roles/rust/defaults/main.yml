@@ -1,0 +1,4 @@
+# roles/rust/defaults/main.yml
+rust_install_script_url: "https://sh.rustup.rs"
+rust_default_toolchain: "stable" # Options: stable, beta, nightly
+tmp_folder: "/tmp"

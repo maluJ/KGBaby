@@ -1,0 +1,11 @@
+[Interface]
+PrivateKey = {{ wireguard_private_key }}
+Address = {{ wireguard_host }}/32
+DNS = 192.168.8.1
+
+[Peer]
+PublicKey = {{ wireguard_server_public_key }}
+PresharedKey = {{ wireguard_preshared_key }}
+AllowedIPs = 192.168.8.0/24, 192.168.130.131/32
+Endpoint = 84.73.192.51:51821
+PersistentKeepalive = 25

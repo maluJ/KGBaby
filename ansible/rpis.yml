@@ -1,0 +1,205 @@
+---
+- name: Upgrade and Reboot
+  hosts: all
+  become: true
+  tasks:
+    - name: Update all packages to their latest version
+      apt:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Check if a reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+        get_checksum: no
+      register: reboot_required_file
+
+    - name: Reboot the server (if required).
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+      when: reboot_required_file.stat.exists == true
+
+    - name: Remove dependencies that are no longer required.
+      ansible.builtin.apt:
+        autoremove: yes
+
+    - name: Autoclean.
+      ansible.builtin.apt:
+        autoclean: yes
+
+- name: Install common packages
+  hosts: all
+  become: yes
+  roles:
+    - common
+
+- name: Install nvim
+  hosts: all
+  become: yes
+  roles:
+    - nvim
+
+- name: Install zsh shell and oh-my-zsh
+  hosts: all
+  become: yes
+  vars:
+    users:
+      - username: "pi"
+  tasks:
+    - name: Install zsh
+      apt:
+        name: zsh
+        state: present
+    - name: Set Zsh as the default shell for users
+      ansible.builtin.user:
+        name: "{{ item.username }}"
+        shell: /bin/zsh
+      loop: "{{ users }}"
+
+    - name: Install Oh My Zsh for users
+      ansible.builtin.git:
+        repo: https://github.com/ohmyzsh/ohmyzsh.git
+        dest: /home/{{ item.username }}/.oh-my-zsh
+        version: master
+      loop: "{{ users }}"
+      become_user: "{{ item.username }}"
+
+    - name: Copy the default .zshrc for users
+      ansible.builtin.copy:
+        src: /home/{{ item.username }}/.oh-my-zsh/templates/zshrc.zsh-template
+        dest: /home/{{ item.username }}/.zshrc
+        remote_src: yes
+      loop: "{{ users }}"
+      become_user: "{{ item.username }}"
+
+- name: Install SSH keys from ssh_public_keys.yml
+  hosts: all
+  become: yes
+  vars_files:
+    - public_keys.yml
+  tasks:
+    - name: Add SSH key for users
+      ansible.builtin.authorized_key:
+        user: "pi"
+        key: "{{ item }}"
+        state: present
+      loop: "{{ keys }}"
+
+# - name: Remove password authentication and root login
+#   hosts: all
+#   become: yes
+#   roles:
+#     - ssh_hardening
+#   vars_files:
+#     - users.yml
+#   vars:
+#     ssh_port: 22
+#     allow_root_login: false
+#     allow_password_auth: false
+#     allowed_ssh_users: "{{ users | map(attribute='name') | list  + [ansible_user]}}"
+
+- name: Install WireGuard
+  hosts: all
+  become: yes
+  roles:
+    - wireguard
+
+- name: Ensure UFW is installed
+  hosts: all
+  become: yes
+  roles:
+    - ufw
+  vars:
+    allowed_ports:
+      - 22
+      - 80
+
+- name: Ensure all hosts have all hostnames set
+  hosts: all
+  become: yes
+  roles:
+    - hostnames
+  tasks:
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+      notify: Restart network
+
+  handlers:
+    - name: Restart network
+      ansible.builtin.service:
+        name: systemd-networkd
+        state: restarted
+
+- name: Install Python
+  hosts: all
+  become: yes
+  roles:
+    - python
+  tasks:
+    - name: upgrade pip
+      ansible.builtin.command:
+        cmd: python3 -m pip install --upgrade pip
+
+- name: Install Rust
+  hosts: all
+  roles:
+    - rust
+  vars:
+    tmp_folder: "/home/pi/tmp"
+
+- name: Mount NFS shares from DriveBase
+  hosts: all
+  become: yes
+  vars:
+    nfs_server: "192.168.130.131"
+    nfs_shares:
+      - { export_path: "/volume1/scratch/kgb", mount_path: "/mnt/kgb" }
+
+  tasks:
+    - name: Install NFS client packages
+      ansible.builtin.package:
+        name: "{{ 'nfs-common' if ansible_os_family == 'Debian' else 'nfs-utils' }}"
+        state: present
+
+    - name: Ensure mnt path exists
+      ansible.builtin.file:
+        path: "{{ item.mount_path }}"
+        state: directory
+        mode: "0755"
+        owner: pi
+        group: pi
+      loop: "{{ nfs_shares }}"
+
+    - name: Mount and persist NFS shares
+      ansible.builtin.mount:
+        path: "{{ item.mount_path }}"
+        src: "{{ nfs_server }}:{{ item.export_path }}"
+        fstype: "nfs"
+        opts: "defaults"
+        state: "mounted"
+      loop: "{{ nfs_shares }}"
+      register: mounted_shares
+
+    - name: Ensure NFS mounts persist on reboot
+      ansible.builtin.mount:
+        path: "{{ item.mount_path }}"
+        src: "{{ nfs_server }}:{{ item.export_path }}"
+        fstype: "nfs"
+        opts: "defaults"
+        state: "present"
+      loop: "{{ nfs_shares }}"
+
+    - name: change owner of mounted shares
+      ansible.builtin.file:
+        path: "{{ item.mount_path }}"
+        owner: pi
+        group: pi
+        recurse: yes
+      loop: "{{ nfs_shares }}"
+# - name: Create a local ssh_config file
+#   hosts: localhost
+#   gather_facts: no
+#   roles:
+#     - ssh_config

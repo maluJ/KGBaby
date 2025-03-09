@@ -1,0 +1,12 @@
+- name: Collect ansible_host and ansible_user for all hosts
+  add_host:
+    name: "{{ item }}"
+    ansible_host: "{{ hostvars[item].ansible_host | default(item) }}"
+    ansible_user: "{{ hostvars[item].ansible_user | default('root') }}"
+  loop: "{{ groups['all'] }}"
+
+- name: Generate SSH Config file
+  template:
+    src: ssh_config.j2
+    dest: ./config
+    mode: "0600"
