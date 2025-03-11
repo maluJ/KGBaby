@@ -35,3 +35,7 @@ rpi5s:
       ansible_host: 192.168.112.54
       ansible_user: pi
       wireguard_host: 192.168.8.4
+    rpi54:
+      ansible_host:
+      ansible_user: pi
+      wireguard_host: 192.168.8.10

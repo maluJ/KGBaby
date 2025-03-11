@@ -2,5 +2,5 @@
 
 # Hosts for cluster
 {% for host in groups['all'] %}
-{{ hostvars[host].ansible_host }}   {{ host }}
+{{ hostvars[host].wireguard_host }}   {{ host }}
 {% endfor %}
