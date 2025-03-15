@@ -2,8 +2,9 @@ import pyaudio
 import wave
 import time
 import argparse
+import sys
 
-def record_audio(output_file="recording.wav", duration=5, sample_rate=44100, channels=1, chunk=1024):
+def record_audio(output_file="recording.wav", duration=5, sample_rate=44100, channels=1, chunk=512):
     """
     Record audio from the default input device (webcam microphone)
     
@@ -54,7 +55,11 @@ def record_audio(output_file="recording.wav", duration=5, sample_rate=44100, cha
     
     # Record audio in chunks
     for i in range(0, int(sample_rate / chunk * duration)):
-        data = stream.read(chunk, exception_on_overflow = False)
+        try:
+            data = stream.read(chunk)
+        except OSError as error:
+            print("OSError Exception. Probably buffer overflow, please adapt the chunk size. terminating program.")
+            sys.exit()
         frames.append(data)
         # Display progress
         if i % 10 == 0:
