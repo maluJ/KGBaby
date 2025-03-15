@@ -14,5 +14,5 @@ pyenv install 3.12.9
 pyenv virtualenv 3.12.9 kgbaby
 pyenv activate kgbaby
 
-pip install opencv-python pyaudio
+pip install opencv-python pyaudio picamera2
 
