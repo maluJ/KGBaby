@@ -1,3 +1,30 @@
+"""
+Scream Detection System
+
+This program records audio in real-time using a microphone and detects whether a baby is crying (screaming). 
+The detection is based on the volume of the sound and can be triggered when the average volume exceeds a certain threshold.
+The detection also considers a success rate over a specified observation window to prevent false positives.
+
+Features:
+- Real-time audio recording and scream detection
+- Configurable observation window (in seconds) and success rate percentage
+- Logs the timestamp of scream events to a text file in ISO format
+- The detection will trigger if the success rate of screams over the defined window exceeds the set threshold
+
+Dependencies:
+- pyaudio: for audio input
+- numpy: for numerical processing of audio data
+- collections: for the ring buffer (deque)
+- datetime: for timestamp generation
+
+Configuration Parameters:
+- OBSERVATION_TIME (seconds): Time window for observing scream events
+- SUCCESS_RATE (percentage): Percentage of successful scream detections required within the window
+- THRESHOLD: Volume threshold to detect a scream
+- LOG_FILE: File path for logging timestamps when a scream event is detected
+
+Author: KGBaby Engineering team & CHATGPT """
+
 import pyaudio
 import threading
 import queue
