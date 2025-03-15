@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask with HTMX and Tailwind</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+    <script src="{{ url_for('static', filename='js/htmx.min.js') }}"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold">Hello, Flask with HTMX and Tailwind!</h1>
+        <div hx-get="/some-endpoint" hx-trigger="click" hx-target="#content">
+            <button class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Load Content</button>
+        </div>
+        <div id="content" class="mt-4"></div>
+    </div>
+</body>
+</html>
