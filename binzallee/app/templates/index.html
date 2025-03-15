@@ -1,19 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Flask with HTMX and Tailwind</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
-    <script src="{{ url_for('static', filename='js/htmx.min.js') }}"></script>
-</head>
-<body class="bg-gray-100 text-gray-900">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/tailwind.css') }}"
+    />
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-900">
     <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold">Hello, Flask with HTMX and Tailwind!</h1>
-        <div hx-get="/some-endpoint" hx-trigger="click" hx-target="#content">
-            <button class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">Load Content</button>
-        </div>
-        <div id="content" class="mt-4"></div>
+      <h1 class="text-3xl font-bold">KGBaby!!!</h1>
+      <div id="video">
+        <img src="http://192.168.178.60:8081" alt="My name is Ivo" />
+      </div>
+      <div id="event_log">
+        <h2>Event Log</h2>
+        <table
+          hx-get="/event_log"
+          hx-trigger="load, every 5s"
+          hx-target="#event-table-body"
+        >
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Event Type</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody id="event-table-body">
+            <!-- HTMX will populate this -->
+          </tbody>
+        </table>
+        <button
+          hx-post="/action"
+          hx-trigger="click"
+          hx-swap="none"
+          class="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Action
+        </button>
+      </div>
+
+      <!-- <script type="text/hx-template" id="event-row-template">
+        {% for event in events %}
+        <tr>
+            <td>{{ event.timestamp }}</td>
+            <td>{{ event.event_type }}</td>
+            <td>{{ event.comment }}</td>
+        </tr>
+        {% endfor %}
+      </script> -->
+
+      <script>
+        htmx.onLoad(function () {
+          htmx.process(document.body);
+          htmx.on("#event-table-body", "htmx:afterSwap", function (evt) {
+            const response = JSON.parse(evt.detail.xhr.responseText);
+            let rows = "";
+            response.forEach((event) => {
+              rows += `
+                            <tr>
+                                <td>${event.timestamp}</td>
+                                <td>${event.event_type}</td>
+                                <td>${event.comment}</td>
+                            </tr>
+                        `;
+            });
+            document.getElementById("event-table-body").innerHTML = rows;
+          });
+        });
+      </script>
     </div>
-</body>
+  </body>
 </html>
