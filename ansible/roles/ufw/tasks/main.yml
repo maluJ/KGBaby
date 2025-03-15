@@ -13,6 +13,7 @@
 
 - name: Enable UFW and set default rules
   ufw:
-    state: enabled
+    # state: enabled
+    state: disabled
     direction: incoming
     policy: deny

@@ -1,37 +1,117 @@
 ---
-- name: Update apt cache
+- name: install motion
   apt:
-    update_cache: yes
-
-- name: Install Nginx
-  apt:
-    name: nginx
+    name: motion
     state: present
 
-- name: Install Nginx Plus module RTMP for RPi
-  apt:
-    # name: nginx-plus-modue-rtmp
-    name: libnginx-mod-rtmp
-    state: present
-
-- name: Config files
+- name: motion config
   ansible.builtin.template:
-    src: nginx.conf.j2
-    dest: /etc/nginx/nginx.conf
+    src: motion.conf.j2
+    dest: /etc/motion/motion.conf
     owner: root
     group: root
     mode: "644"
 
-- name: Ensure Nginx is started
+- name: motion service
   ansible.builtin.service:
-    name: nginx
-    state: started
-
-- name: Restart Nginx
-  ansible.builtin.service:
-    name: nginx
+    name: motion
     state: restarted
-# - name: Start custom process
-#   ansible.builtin.command:
-#     cmd: ffmpeg -f v4l2 -i /dev/video0 -c:v libx264 -preset ultrafast -f flv rtmp://<RTMP_SERVER_IP>/live/stream
-#     creates: tmp/video_streaming.pid
+
+- name: motion service enabled
+  ansible.builtin.service:
+    name: motion
+    enabled: yes
+# - name: Update apt cache
+#   apt:
+#     update_cache: yes
+
+# - name: Install FFmpeg
+#   apt:
+#     name: ffmpeg
+#     state: present
+
+# - name: Install Nginx
+#   apt:
+#     name: nginx
+#     state: absent
+
+# - name: Install Nginx Plus module RTMP for RPi
+#   apt:
+#     # name: nginx-plus-modue-rtmp
+#     name: libnginx-mod-rtmp
+#     state: absent
+
+# - name: Install dependencies
+#   apt:
+#     name:
+#       - build-essential
+#       - libpcre3
+#       - libpcre3-dev
+#       - libssl-dev
+#       - zlib1g-dev
+#       - git
+#       - ffmpeg
+#       - curl
+#     state: present
+
+# - name: Clone necessary repositories
+#   git:
+#     repo: "{{ item.repo }}"
+#     dest: "/usr/local/src/{{ item.dest }}"
+#     version: master
+#   loop:
+#     - { repo: "https://github.com/nginx/nginx.git", dest: "nginx" }
+#     - {
+#         repo: "https://github.com/arut/nginx-rtmp-module.git",
+#         dest: "nginx-rtmp-module",
+#       }
+#     - { repo: "https://github.com/ossrs/srs.git", dest: "srs" }
+
+# - name: Compile and install NGINX with RTMP and WebRTC support
+#   shell: |
+#     cd /usr/local/src/nginx
+#     ./auto/configure --prefix={{ nginx_install_path }} --add-module=/usr/local/src/nginx-rtmp-module --add-module=/usr/local/src/srs/trunk/rtc
+#     make -j$(nproc)
+#     make install
+#   args:
+#     executable: /bin/bash
+#   changed_when: true
+
+# - name: Ivo's camera service config files
+#   ansible.builtin.template:
+#     src: camera.service.j2
+#     dest: /etc/systemd/system/camera.service
+#     owner: root
+#     group: root
+#     mode: "644"
+
+# - name: Start Ivo's Camera Service
+#   ansible.builtin.service:
+#     name: camera.service
+#     state: started
+
+# - name: Add index.html
+#   ansible.builtin.template:
+#     src: index.html.j2
+#     dest: /var/www/html/index.html
+#     owner: root
+#     group: root
+#     mode: "644"
+
+# - name: NGINX Config files
+#   ansible.builtin.template:
+#     src: nginx.conf.j2
+#     dest: /etc/nginx/nginx.conf
+#     owner: root
+#     group: root
+#     mode: "644"
+
+# - name: Ensure Nginx is started
+#   ansible.builtin.service:
+#     name: nginx
+#     state: started
+
+# - name: Restart Nginx
+#   ansible.builtin.service:
+#     name: nginx
+#     state: restarted

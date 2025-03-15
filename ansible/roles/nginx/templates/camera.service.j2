@@ -1,0 +1,16 @@
+[Unit]
+Description=Ivo's camera service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/ffmpeg -f v4l2 -i /dev/video0 -c:v libx264 -preset veryfast -f flv rtmp://localhost/live/stream
+# ExecStart=/usr/bin/ffmpeg -f v4l2 -i /dev/video0 -c:v libx264 -preset veryfast -tune zerolatency -g 25 -keyint_min 25 -b:v 1500k -maxrate 1500k -bufsize 3000k -f flv
+WorkingDirectory=/home/pi
+Restart=always
+User=pi
+StandardOutput=append:/home/pi/ivo's_camera_service.log
+StandardError=append:/home/pi/ivo's_camera_service.err
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
