@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import time
 import threading
+from collections import deque 
 
 app = Flask(__name__)
 
@@ -17,15 +18,83 @@ picam2.start()
 frame = None
 frame_lock = threading.Lock()
 
+last_frame = None
+
+movement_start_time = None
+pixel_change_sum = 0
+
+FRAME_RATE = 20.0 # Hz
+BUFFER_TIME_WINDOW = 1.0 # sec
+BUFFER_SIZE = int(BUFFER_TIME_WINDOW * FRAME_RATE)
+pixel_change_buffer = deque(maxlen=BUFFER_SIZE)
+
+def process_frame(frame):
+    global last_frame
+    if last_frame is None:
+        last_frame = frame
+        return
+
+    frame_diff = cv2.absdiff(last_frame, frame)
+
+    thresh = cv2.cvtColor(frame_diff, cv2.COLOR_BGR2GRAY)
+
+    thresh = cv2.threshold(thresh, 30, 255, cv2.THRESH_BINARY)[1]
+
+    # thresh = cv2.dilate(thresh, None, iterations=2)
+
+    # contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # print(f"Got {len(contours)} contours.")
+    
+    # # Check for significant movement
+    # significant_movement = False
+    # MIN_CONTOUR_AREA = 500
+    # for contour in contours:
+    #     if cv2.contourArea(contour) > MIN_CONTOUR_AREA:
+    #         significant_movement = True
+    #         # Draw rectangle around movement (optional)
+    #         x, y, w, h = cv2.boundingRect(contour)
+    #         cv2.rectangle(frame_diff, (x, y), (x+w, y+h), (0, 255, 0), 2)
+    #         break
+
+    # Count changed pixels
+    changed_pixels = cv2.countNonZero(thresh)
+
+    global pixel_change_buffer
+    pixel_change_buffer.append(changed_pixels)
+
+    total_pixel_change = sum(pixel_change_buffer)
+
+    PIXEL_CHANGE_THRESHOLD = 10000  # Minimum number of changed pixels per frame
+    HIT_RATIO_TO_TRIGGER = 0.5
+    ACCUM_PIXEL_THRESHOLD = PIXEL_CHANGE_THRESHOLD * HIT_RATIO_TO_TRIGGER * BUFFER_SIZE
+    movement_detected = False
+    if total_pixel_change > ACCUM_PIXEL_THRESHOLD:
+        movement_detected = True
+        pixel_change_buffer.clear()
+    
+    # Display status
+    status = f"Movement: {movement_detected} (Pixels: {total_pixel_change} of {ACCUM_PIXEL_THRESHOLD}) "
+    cv2.putText(frame_diff, status, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
+                1, (0, 0, 255) if movement_detected else (255, 0, 0), 2)
+
+    last_frame = frame
+
+    return frame_diff
+
 def capture_frames():
     global frame
     while True:
         current_frame = picam2.capture_array()
         # Convert to BGR format for OpenCV
         current_frame = cv2.cvtColor(current_frame, cv2.COLOR_RGBA2BGR)
+
+        print("processing frame.")
+        display_frame = process_frame(current_frame)
+
         with frame_lock:
-            frame = current_frame
-        time.sleep(0.05)  # ~20 FPS
+            frame = display_frame
+        
+        time.sleep(1.0/FRAME_RATE)  # ~20 FPS
 
 @app.route('/')
 def index():
