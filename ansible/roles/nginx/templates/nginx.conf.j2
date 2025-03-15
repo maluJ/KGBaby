@@ -58,23 +58,38 @@ http {
 
         include /etc/nginx/conf.d/*.conf;
         include /etc/nginx/sites-enabled/*;
+        
+        http {
+            server {
+            listen 8080;
+            location / {
+                root /var/www/html;
+                index index.html;
+            }
+
+            location /webrtc {
+                webrtc_play;
+                add_header Cache-Control no-cache;
+            }
+    }
 }
 
 rtmp {
     server {
         listen 1935; # Default RTMP port
-        chunk_size 4096; # Reduced chunk size
+        # chunk_size 4096; # Reduced chunk size
         # buflen 500ms; # Reduced buffer length
         # tcp_nodelay on; # Enable TCP_NODELAY
 
-        application live {
-            live on; # Enable live streaming
-            record off; # Disable recording (optional: set to 'all' to save streams)
+         application live {
+            live on;
+            record off;
             interleave on;
-            wait_key on;
-            # gop_cache on;
-            drop_idle_publisher 5s;
-            sync 100ms;
+
+            # Enable WebRTC support
+            webrtc on;
+            webrtc_port 8080;  # WebRTC signaling
+            # webrtc_stun_server stun:stun.l.google.com:19302;
         }
     }
 }
