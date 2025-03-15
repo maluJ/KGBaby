@@ -1,37 +1,41 @@
-rpi3s:
-  hosts:
-    rpi31:
-      ansible_host: 192.168.200.123
-      ansible_user: pi
-      wireguard_host: 192.168.8.5
-    rpi32:
-      ansible_host: 192.168.200.67
-      ansible_user: pi
-      wireguard_host: 192.168.8.6
-    rpi33:
-      ansible_host: 192.168.200.157
-      ansible_user: pi
-      wireguard_host: 192.168.8.7
-    rpi34:
-      ansible_host: 192.168.200.73
-      ansible_user: pi
-      wireguard_host: 192.168.8.8
-    rpi35:
-      ansible_host: 192.168.200.217
-      ansible_user: pi
-      wireguard_host: 192.168.8.9
+# rpi3s:
+#   hosts:
+#     rpi31:
+#       ansible_host: 192.168.200.123
+#       ansible_user: pi
+#       wireguard_host: 192.168.8.5
+#     rpi32:
+#       ansible_host: 192.168.200.67
+#       ansible_user: pi
+#       wireguard_host: 192.168.8.6
+#     rpi33:
+#       ansible_host: 192.168.200.157
+#       ansible_user: pi
+#       wireguard_host: 192.168.8.7
+#     rpi34:
+#       ansible_host: 192.168.200.73
+#       ansible_user: pi
+#       wireguard_host: 192.168.8.8
+#     rpi35:
+#       ansible_host: 192.168.200.217
+#       ansible_user: pi
+#       wireguard_host: 192.168.8.9
 
 rpi5s:
   hosts:
     rpi51:
-      ansible_host: 192.168.112.59
+      ansible_host: 192.168.178.58
       ansible_user: pi
       wireguard_host: 192.168.8.2
     rpi52:
-      ansible_host: 192.168.112.114
+      ansible_host: 192.168.178.59
       ansible_user: pi
       wireguard_host: 192.168.8.3
     rpi53:
-      ansible_host: 192.168.112.54
+      ansible_host: 192.168.178.60
       ansible_user: pi
       wireguard_host: 192.168.8.4
+    # tims:
+    #   ansible_host: 192.168.178.56
+    #   ansible_user: pi
+    #   wireguard_host: 192.168.8.10

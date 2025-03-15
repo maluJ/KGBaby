@@ -1,0 +1,15 @@
+---
+- name: Install FFmpeg on Raspberry Pi
+  hosts: all
+  become: yes
+  roles:
+    - nginx
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install FFmpeg
+      apt:
+        name: ffmpeg
+        state: present

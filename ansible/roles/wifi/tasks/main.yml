@@ -1,0 +1,28 @@
+- name: Install wpa_supplicant
+  apt:
+    name:
+      - wpasupplicant
+      - wireless-tools
+      - iw
+    state: present
+
+# - name: Create wpa_supplicant.conf
+#   ansible.builtin.template:
+#     src: wpa_supplicant.conf.j2
+#     dest: /etc/wpa_supplicant/wpa_supplicant.conf
+#     owner: root
+#     group: root
+#     mode: "0644"
+
+- name: Configure WiFi using raspi-config
+  command: "raspi-config nonint do_wifi_ssid_passphrase '{{ ssid }}' '{{ psk }}'"
+
+- name: Restart wpa_supplicant
+  systemd:
+    name: wpa_supplicant
+    state: restarted
+# - name: Enable wpa_supplicant service
+#   ansible.builtin.systemd:
+#     name: wpa_supplicant
+#     enabled: yes
+#     state: started

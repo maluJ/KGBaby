@@ -1,0 +1,49 @@
+- name: Mount NFS shares from DriveBase
+  hosts: all
+  become: yes
+  vars:
+    nfs_server: "192.168.130.131"
+    nfs_shares:
+      - { export_path: "/volume1/scratch/kgb", mount_path: "/mnt/kgb" }
+
+  tasks:
+    - name: Install NFS client packages
+      ansible.builtin.package:
+        name: "{{ 'nfs-common' if ansible_os_family == 'Debian' else 'nfs-utils' }}"
+        state: present
+
+    - name: Ensure mnt path exists
+      ansible.builtin.file:
+        path: "{{ item.mount_path }}"
+        state: directory
+        mode: "0755"
+        owner: pi
+        group: pi
+      loop: "{{ nfs_shares }}"
+
+    - name: Mount and persist NFS shares
+      ansible.builtin.mount:
+        path: "{{ item.mount_path }}"
+        src: "{{ nfs_server }}:{{ item.export_path }}"
+        fstype: "nfs"
+        opts: "defaults"
+        state: "mounted"
+      loop: "{{ nfs_shares }}"
+      register: mounted_shares
+
+    - name: Ensure NFS mounts persist on reboot
+      ansible.builtin.mount:
+        path: "{{ item.mount_path }}"
+        src: "{{ nfs_server }}:{{ item.export_path }}"
+        fstype: "nfs"
+        opts: "defaults"
+        state: "present"
+      loop: "{{ nfs_shares }}"
+
+    - name: change owner of mounted shares
+      ansible.builtin.file:
+        path: "{{ item.mount_path }}"
+        owner: pi
+        group: pi
+        recurse: yes
+      loop: "{{ nfs_shares }}"
