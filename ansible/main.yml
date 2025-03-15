@@ -1,0 +1,92 @@
+---
+- import_playbook: upgrade_and_reboot.yml
+
+- name: Install common packages
+  hosts: all
+  become: yes
+  roles:
+    - common
+
+# - name: Install nvim
+#   hosts: all
+#   become: yes
+#   roles:
+#     - nvim
+
+- import_playbook: zsh_oh_my.yml
+
+- import_playbook: pyenv.yml
+
+- name: Install SSH keys from ssh_public_keys.yml
+  hosts: all
+  become: yes
+  vars_files:
+    - public_keys.yml
+  tasks:
+    - name: Add SSH key for users
+      ansible.builtin.authorized_key:
+        user: "pi"
+        key: "{{ item }}"
+        state: present
+      loop: "{{ keys }}"
+
+- import_playbook: generate_and_distribute_ssh_keys.yml
+
+- name: Install WireGuard
+  hosts: all
+  become: yes
+  roles:
+    - wireguard
+
+- import_playbook: ufw.yml
+
+- name: Ensure all hosts have all hostnames set
+  hosts: all
+  become: yes
+  roles:
+    - hostnames
+  tasks:
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+      notify: Restart network
+
+  handlers:
+    - name: Restart network
+      ansible.builtin.service:
+        name: systemd-networkd
+        state: restarted
+
+- name: Install Python
+  hosts: all
+  become: yes
+  roles:
+    - python
+  tasks:
+    - name: upgrade pip
+      ansible.builtin.command:
+        cmd: python3 -m pip install --upgrade pip
+
+# - name: Install Rust
+#   hosts: all
+#   roles:
+#     - rust
+#   vars:
+#     tmp_folder: "/home/pi/tmp"
+
+- import_playbook: nfs.yml
+
+- import_playbook: ssh_config.yml
+# - name: Create a local ssh_config file
+#   hosts: localhost
+#   gather_facts: no
+#   roles:
+#     - ssh_config
+
+# - name: Configure WiFi
+#   hosts: all
+#   become: yes
+#   vars_files:
+#     - wifi.yml
+#   roles:
+#     - wifi

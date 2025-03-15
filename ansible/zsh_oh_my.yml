@@ -1,0 +1,32 @@
+- name: Install zsh shell and oh-my-zsh
+  hosts: all
+  become: yes
+  vars:
+    users:
+      - username: "pi"
+  tasks:
+    - name: Install zsh
+      apt:
+        name: zsh
+        state: present
+    - name: Set Zsh as the default shell for users
+      ansible.builtin.user:
+        name: "{{ item.username }}"
+        shell: /bin/zsh
+      loop: "{{ users }}"
+
+    - name: Install Oh My Zsh for users
+      ansible.builtin.git:
+        repo: https://github.com/ohmyzsh/ohmyzsh.git
+        dest: /home/{{ item.username }}/.oh-my-zsh
+        version: master
+      loop: "{{ users }}"
+      become_user: "{{ item.username }}"
+
+    - name: Copy the default .zshrc for users
+      ansible.builtin.copy:
+        src: /home/{{ item.username }}/.oh-my-zsh/templates/zshrc.zsh-template
+        dest: /home/{{ item.username }}/.zshrc
+        remote_src: yes
+      loop: "{{ users }}"
+      become_user: "{{ item.username }}"

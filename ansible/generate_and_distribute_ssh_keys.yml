@@ -1,0 +1,25 @@
+- name: Generate and distribute SSH keys across hosts
+  hosts: all
+  become: false
+  tasks:
+    - name: Generate SSH key pair if not exists
+      ansible.builtin.openssh_keypair:
+        path: ~/.ssh/id_rsa
+        type: rsa
+        size: 4096
+        state: present
+      delegate_to: "{{ inventory_hostname }}"
+      register: ssh_key
+
+    - name: Fetch the public key from each host
+      ansible.builtin.fetch:
+        src: ~/.ssh/id_rsa.pub
+        dest: "keys/{{ inventory_hostname }}.pub"
+        flat: yes
+
+    - name: Distribute collected public keys to all hosts
+      ansible.builtin.authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ lookup('file', 'keys/{{ item }}.pub') }}"
+      loop: "{{ groups['all'] }}"

@@ -1,0 +1,16 @@
+ctrl_interface=/var/run/wpa_supplicant
+update_config=1
+ap_scan=1
+country=CH
+
+{% for network in networks %}
+# Priority {{ loop.index }}: {{ network.name }}
+network={
+    ssid="{{ network.ssid }}"
+{% if network.psk %}
+    psk="{{ network.psk }}"
+{% endif %}
+    key_mgmt={{ network.key_mgmt }}
+    priority={{ network.priority }}
+}
+{% endfor %}
