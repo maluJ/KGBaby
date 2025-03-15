@@ -5,6 +5,7 @@ import numpy as np
 import time
 import threading
 from collections import deque 
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -28,6 +29,8 @@ BUFFER_TIME_WINDOW = 1.0 # sec
 BUFFER_SIZE = int(BUFFER_TIME_WINDOW * FRAME_RATE)
 pixel_change_buffer = deque(maxlen=BUFFER_SIZE)
 
+f = open("motion_detection_events.txt", "a")
+
 def process_frame(frame):
     global last_frame
     if last_frame is None:
@@ -45,22 +48,6 @@ def process_frame(frame):
 
     thresh = cv2.threshold(thresh, 30, 255, cv2.THRESH_BINARY)[1]
 
-    # thresh = cv2.dilate(thresh, None, iterations=2)
-
-    # contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # print(f"Got {len(contours)} contours.")
-    
-    # # Check for significant movement
-    # significant_movement = False
-    # MIN_CONTOUR_AREA = 500
-    # for contour in contours:
-    #     if cv2.contourArea(contour) > MIN_CONTOUR_AREA:
-    #         significant_movement = True
-    #         # Draw rectangle around movement (optional)
-    #         x, y, w, h = cv2.boundingRect(contour)
-    #         cv2.rectangle(frame_diff, (x, y), (x+w, y+h), (0, 255, 0), 2)
-    #         break
-
     # Count changed pixels
     changed_pixels = cv2.countNonZero(thresh)
 
@@ -76,6 +63,9 @@ def process_frame(frame):
     if total_pixel_change > ACCUM_PIXEL_THRESHOLD:
         movement_detected = True
         pixel_change_buffer.clear()
+        global f
+        f.write(f"Movement detected at {datetime.now().isoformat()}\n")
+        print("Movement detected!")
     
     # Display status
     status = f"Movement: {movement_detected} (Pixels: {total_pixel_change} of {ACCUM_PIXEL_THRESHOLD}) "
@@ -142,3 +132,5 @@ if __name__ == '__main__':
     # Start the Flask server
     print("Starting server at http://0.0.0.0:8000")
     app.run(host='0.0.0.0', port=8000, debug=False)
+
+    f.close()
