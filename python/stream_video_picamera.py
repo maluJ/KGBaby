@@ -36,6 +36,11 @@ def process_frame(frame):
 
     frame_diff = cv2.absdiff(last_frame, frame)
 
+    # Mask out a polygon
+    pixel_locations = [(100, 100), (600, 150), (550, 500), (100, 500)]  # Rectangle
+    points = np.array([pixel_locations], dtype=np.int32)
+    cv2.fillPoly(frame_diff, points, 0)
+
     thresh = cv2.cvtColor(frame_diff, cv2.COLOR_BGR2GRAY)
 
     thresh = cv2.threshold(thresh, 30, 255, cv2.THRESH_BINARY)[1]
@@ -76,6 +81,7 @@ def process_frame(frame):
     status = f"Movement: {movement_detected} (Pixels: {total_pixel_change} of {ACCUM_PIXEL_THRESHOLD}) "
     cv2.putText(frame_diff, status, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
                 1, (0, 0, 255) if movement_detected else (255, 0, 0), 2)
+    cv2.polylines(frame_diff, points, isClosed=True, color=(0, 255, 0), thickness=2)
 
     last_frame = frame
 
